@@ -1,0 +1,16 @@
+#BlueJ class context
+comment0.target=GamePanel
+comment0.text=\r\n\ Manages\ the\ timing\ and\ rendering\ of\ instances\ of\ GameObject\r\n\ To\ Do\:\ Integrate\ Key\ and\ Mouse\ functions\ to\ bubble\ down\ to\ the\ instances\ of\ GameObject\r\n\r\n\ @author\ (Paul\ Taylor)\r\n\ @version\ (31st/1/2025)\r\n
+comment1.params=o
+comment1.target=void\ removeItem(GameObject)
+comment2.params=o
+comment2.target=void\ addItem(GameObject)
+comment3.params=g
+comment3.target=void\ paint(java.awt.Graphics)
+comment4.params=e
+comment4.target=void\ actionPerformed(java.awt.event.ActionEvent)
+comment5.params=
+comment5.target=GamePanel()
+comment6.params=
+comment6.target=java.util.HashMap\ getCollisions()
+numComments=7
