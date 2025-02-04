@@ -10,7 +10,7 @@ import java.util.ArrayList;
  * So the idea would be to extend this class into other subclasses
  * 
  * @author (Paul Taylor)
- * @version (31st/1/2025)
+ * @version (3rd/2/2025)
  */
 public class GameObject
 {
@@ -22,7 +22,10 @@ public class GameObject
     protected double speedX; //pixels per second horizontally
     protected double speedY; //pixels per second vertically
     protected boolean moved;
+    protected double panelWidth;
+    protected double panelHeight;
     protected boolean collidable;
+    
     public final double getX(){
         return x;
     }
@@ -73,27 +76,49 @@ public class GameObject
     public void onGameTick(int tick, ArrayList<GameObject> collisions){ //entry point defining behaviour per game tick
         onGameTickDefault(tick,collisions);
     }
+    public final void onPanelResizeDefault(double width, double height){ //default behaviour on game panel resize
+        if(panelWidth<1 || panelHeight<1) return;
+        double ratioWidth = width/panelWidth;
+        double ratioHeight = height/panelHeight;
+        speedX *= ratioWidth;
+        speedY *= ratioHeight;
+        panelWidth = width;
+        panelHeight = height;
+    }
+    public void onPanelResize(double width, double height){ //handler for when game panel resizes
+        onPanelResizeDefault(width,height);
+    }
     
+    public void onMouseDrag(MouseEvent m){}
     public void onMouseMove(MouseEvent m){}
     public void onMouseDown(MouseEvent m){}
     public void onMouseUp(MouseEvent m){}
-    public void onKeyPress(KeyEvent k){}
+    public void onMouseClick(MouseEvent m){} //the mouse was pressed and released
+    public void onKeyPress(KeyEvent k){} //a key was pressed and released
     public void onKeyDown(KeyEvent k){}
     public void onKeyUp(KeyEvent k){}
     
     public GameObject(){
+        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
+        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         collidable = false;
         shape = new Rectangle2D.Double(0,0,10,10);
     }
     public GameObject(Shape s){
+        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
+        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         shape = s;
         collidable = false;
     }
     public GameObject(boolean collides){
+        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
+        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         collidable = collides;
         shape = new Rectangle2D.Double(0,0,10,10);
     }
     public GameObject(Shape s, boolean collides){
+        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
+        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         shape = s;
         moved = false;
         collidable = collides;

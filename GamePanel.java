@@ -9,7 +9,7 @@ import java.awt.event.*;
  * To Do: Integrate Key and Mouse functions to bubble down to the instances of GameObject
  *
  * @author (Paul Taylor)
- * @version (31st/1/2025)
+ * @version (3rd/2/2025)
  */
 public class GamePanel extends JPanel
 {
@@ -20,6 +20,10 @@ public class GamePanel extends JPanel
         gameItems.remove(o.hashCode(),o);
     }
     public void addItem(GameObject o){
+        Dimension size = getSize();
+        double width = size.getWidth();
+        double height = size.getHeight();
+        o.onPanelResize(width,height);
         gameItems.put(o.hashCode(),o);
     }
     @Override
@@ -43,19 +47,28 @@ public class GamePanel extends JPanel
     public GamePanel(){
         setFocusable(true);
         requestFocusInWindow();
+        setPreferredSize(new Dimension(Constants.DEFAULT_PANEL_WIDTH, Constants.DEFAULT_PANEL_HEIGHT));
         tick = 0;
         gameItems = new HashMap<>();
         detector = new CollisionDetector();
         
-        //keyboard listener (incomplete)
+        //keyboard listener
         addKeyListener(new KeyAdapter(){
             @Override
             public void keyPressed(KeyEvent e){
+                for(GameObject gameObject: gameItems.values()) gameObject.onKeyDown(e);
+            }
+            @Override
+            public void keyReleased(KeyEvent e){
+                for(GameObject gameObject: gameItems.values()) gameObject.onKeyUp(e);
+            }
+            @Override
+            public void keyTyped(KeyEvent e){
                 for(GameObject gameObject: gameItems.values()) gameObject.onKeyPress(e);
             }
         });
         
-        //mouse listener (incomplete)
+        //mouse listener
         addMouseListener(new MouseAdapter(){
             @Override
             public void mousePressed(MouseEvent e) {
@@ -64,6 +77,29 @@ public class GamePanel extends JPanel
             @Override
             public void mouseReleased(MouseEvent e){
                 for(GameObject gameObject: gameItems.values()) gameObject.onMouseUp(e);
+            }
+            @Override
+            public void mouseClicked(MouseEvent e){
+                for(GameObject gameObject: gameItems.values()) gameObject.onMouseClick(e);
+            }
+            @Override
+            public void mouseMoved(MouseEvent e){
+                for(GameObject gameObject: gameItems.values()) gameObject.onMouseMove(e);
+            }
+            @Override
+            public void mouseDragged(MouseEvent e){
+                for(GameObject gameObject: gameItems.values()) gameObject.onMouseDrag(e);
+            }
+        });
+        
+        //component listener for panel resize listening
+        addComponentListener(new ComponentAdapter(){
+            @Override
+            public void componentResized(ComponentEvent e){
+                Dimension size = getSize();
+                double width = size.getWidth();
+                double height = size.getHeight();
+                for(GameObject gameObject: gameItems.values()) gameObject.onPanelResize(width,height);
             }
         });
     }
@@ -74,6 +110,7 @@ public class GamePanel extends JPanel
             ArrayList<GameObject> itemCollisions = new ArrayList<>();
             for(GameObject compared: gameItems.values()){
                 if(item==compared) continue;
+                if(!item.isCollidable() || !compared.isCollidable()) continue;
                 if(detector.detected(item.getShape(),compared.getShape()))
                     itemCollisions.add(compared);
             }
