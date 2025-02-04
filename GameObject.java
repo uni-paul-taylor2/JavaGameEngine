@@ -14,18 +14,19 @@ import java.util.ArrayList;
  */
 public class GameObject
 {
-    protected int x;
-    protected int y;
+    protected double x;
+    protected double y;
     protected int sync; //synchronisation with the current game tick
     protected Shape shape;
     protected Color color;
-    protected double speedX;
-    protected double speedY;
+    protected double speedX; //pixels per second horizontally
+    protected double speedY; //pixels per second vertically
+    protected boolean moved;
     protected boolean collidable;
-    public final int getX(){
+    public final double getX(){
         return x;
     }
-    public final int getY(){
+    public final double getY(){
         return y;
     }
     public final Shape getShape(){
@@ -44,29 +45,32 @@ public class GameObject
         return collidable;
     }
     
-    protected boolean validPos(int X, int Y){
+    protected boolean validPos(double X, double Y){ //for an external programmer to determine if a spot is valid to move to or not
         return true;
     }
-    protected final boolean moveTo(int X, int Y){
+    protected final boolean moveTo(double X, double Y){ //for use by an external programmer
         if(!validPos(X,Y)) return false;
         x = x;
         y = y;
-        sync++;
+        if(!moved) sync++;
+        moved = true;
         return true;
     }
-    protected final boolean moveTo(int X, int Y, int tick){
+    protected final boolean moveTo(double X, double Y, int tick){ //for use by an instance of GamePanel
         if(!validPos(X,Y)) return false;
-        x = x;
-        y = y;
+        x = X;
+        y = Y;
         sync = tick;
         return true;
     }
-    public final void onGameTickDefault(int tick, ArrayList<GameObject> collisions){
+    public final void onGameTickDefault(int tick, ArrayList<GameObject> collisions){ //default behaviour per game tick
         if(sync==tick) return;
-        //
+        moveTo(x+(speedX/Constants.TICK_RATE), y+(speedY/Constants.TICK_RATE), tick); //simulate speed per tick
+        //TODO: handle if there are collisions (if collisions is not an empty set)
         sync = tick;
+        moved = false; //reset moved boolean for the next tick
     }
-    public void onGameTick(int tick, ArrayList<GameObject> collisions){
+    public void onGameTick(int tick, ArrayList<GameObject> collisions){ //entry point defining behaviour per game tick
         onGameTickDefault(tick,collisions);
     }
     
@@ -91,6 +95,7 @@ public class GameObject
     }
     public GameObject(Shape s, boolean collides){
         shape = s;
+        moved = false;
         collidable = collides;
     }
 }
