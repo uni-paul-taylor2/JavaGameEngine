@@ -30,18 +30,10 @@ public class GamePanel extends JPanel
     public void paint(Graphics g){
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
-        int ms = 1000/Constants.TICK_RATE;
-        Timer interval = new Timer(ms,new ActionListener(){
-            public void actionPerformed(ActionEvent e) {
-                tick++;
-                HashMap<GameObject,ArrayList<GameObject>> collisions = getCollisions();
-                for(GameObject gameObject: gameItems.values()){
-                    gameObject.onGameTick(tick,collisions.get(gameObject));
-                    //TODO: draw the instance of GameObject
-                }
-            }
-        });
-        interval.start();
+        for(GameObject gameObject: gameItems.values()){
+            g2.setColor(gameObject.getColor());
+            g2.fill(gameObject.getShape());
+        }
     }
     
     public GamePanel(){
@@ -51,6 +43,20 @@ public class GamePanel extends JPanel
         tick = 0;
         gameItems = new HashMap<>();
         detector = new CollisionDetector();
+        
+        //game interval
+        int ms = 1000/Constants.TICK_RATE;
+        Timer interval = new Timer(ms,new ActionListener(){
+            public void actionPerformed(ActionEvent e) {
+                tick++;
+                HashMap<GameObject,ArrayList<GameObject>> collisions = getCollisions();
+                for(GameObject gameObject: gameItems.values()){
+                    gameObject.onGameTick(tick,collisions.get(gameObject));
+                }
+                repaint();
+            }
+        });
+        interval.start();
         
         //keyboard listener
         addKeyListener(new KeyAdapter(){

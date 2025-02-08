@@ -53,8 +53,8 @@ public class GameObject
     }
     protected final boolean moveTo(double X, double Y){ //for use by an external programmer
         if(!validPos(X,Y)) return false;
-        x = x;
-        y = y;
+        x = X;
+        y = Y;
         if(!moved) sync++;
         moved = true;
         return true;
@@ -102,18 +102,21 @@ public class GameObject
         panelWidth = Constants.DEFAULT_PANEL_WIDTH;
         panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         collidable = false;
+        moved = false;
         shape = new Rectangle2D.Double(0,0,10,10);
     }
     public GameObject(Shape s){
         panelWidth = Constants.DEFAULT_PANEL_WIDTH;
         panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         shape = s;
+        moved = false;
         collidable = false;
     }
     public GameObject(boolean collides){
         panelWidth = Constants.DEFAULT_PANEL_WIDTH;
         panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         collidable = collides;
+        moved = false;
         shape = new Rectangle2D.Double(0,0,10,10);
     }
     public GameObject(Shape s, boolean collides){
@@ -121,6 +124,14 @@ public class GameObject
         panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         shape = s;
         moved = false;
+        collidable = collides;
+    }
+    public GameObject(Shape s, Color c, boolean collides){
+        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
+        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
+        shape = s;
+        moved = false;
+        color = c;
         collidable = collides;
     }
 }
