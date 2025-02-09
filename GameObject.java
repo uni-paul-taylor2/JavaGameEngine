@@ -16,33 +16,59 @@ public class GameObject
 {
     protected double x;
     protected double y;
+    protected double angle=0, pivotX=0, pivotY=0;
+    protected boolean rotated=false; //if shape has been rotated before
     protected int sync; //synchronisation with the current game tick
     protected Shape shape;
     protected Color color;
-    protected double speedX; //pixels per second horizontally
-    protected double speedY; //pixels per second vertically
-    protected boolean moved;
-    protected double panelWidth;
-    protected double panelHeight;
+    protected double speedX=0; //pixels per second horizontally
+    protected double speedY=0; //pixels per second vertically
+    protected boolean moved=false;
+    protected double panelWidth=Constants.DEFAULT_PANEL_WIDTH;
+    protected double panelHeight=Constants.DEFAULT_PANEL_HEIGHT;
     protected boolean collidable;
+    protected GameObject attatchedItem=null;
+    protected double diffX=0, diffY=0; //difference in position between self and attatchedItem
+    
+    public static final Path2D Rotate(Shape s, double angle, double pivotX, double pivotY){
+        Path2D path = new Path2D.Double(s);
+        AffineTransform transformer = new AffineTransform();
+        transformer.setToRotation(angle,pivotX,pivotY);
+        path.transform(transformer);
+        return path;
+    }
     
     public final double getX(){
-        return x;
+        if(!rotated) return shape.getBounds2D().getX();
+        Shape original = Rotate(shape,-angle,pivotX,pivotY);
+        return original.getBounds2D().getX();
     }
     public final double getY(){
-        return y;
+        if(!rotated) return shape.getBounds2D().getY();
+        Shape original = Rotate(shape,-angle,pivotX,pivotY);
+        return original.getBounds2D().getY();
     }
     public final Shape getShape(){
         return shape;
     }
+    public final void setShape(Shape s){
+        shape = s;
+    }
     public final Color getColor(){
         return color;
+    }
+    public final void setColor(Color c){
+        color = c;
     }
     public final double getSpeedX(){
         return speedX;
     }
     public final double getSpeedY(){
         return speedY;
+    }
+    public final void setSpeed(double x_speed, double y_speed){
+        speedX = x_speed;
+        speedY = y_speed;
     }
     public final boolean isCollidable(){
         return collidable;
@@ -53,23 +79,73 @@ public class GameObject
     }
     protected final boolean moveTo(double X, double Y){ //for use by an external programmer
         if(!validPos(X,Y)) return false;
-        x = X;
-        y = Y;
         if(!moved) sync++;
-        moved = true;
+        AffineTransform transformer = new AffineTransform();
+        double translateX = X-getX();
+        double translateY = Y-getY();
+        if(attatchedItem!=null){
+            pivotX += translateX;
+            pivotY += translateY;
+        }
+        transformer.translate(translateX, translateY);
+        shape = transformer.createTransformedShape(shape);
+        x = getX();
+        y = getY();
         return true;
     }
     protected final boolean moveTo(double X, double Y, int tick){ //for use by an instance of GamePanel
         if(!validPos(X,Y)) return false;
-        x = X;
-        y = Y;
         sync = tick;
+        moved = true;
+        moveTo(X,Y);
+        return true;
+    }
+    public final void attatchTo(GameObject o){
+        diffX = getX()-o.getX();
+        diffY = getY()-o.getY();
+        attatchedItem = o;
+    }
+    public final void attatchItem(GameObject o){
+        o.attatchTo(this);
+    }
+    public final boolean rotate(double angle){
+        //rotation necessitates shape to be instance of Path2D
+        if(!(shape instanceof Path2D)) return false;
+        Path2D path = (Path2D)shape;
+        AffineTransform transformer = new AffineTransform();
+        transformer.setToRotation(-this.angle,this.pivotX,this.pivotY);
+        if(rotated) path.transform(transformer);
+        transformer.setToRotation(angle);
+        path.transform(transformer);
+        this.pivotX = 0;
+        this.pivotY = 0;
+        this.angle = angle;
+        rotated = true;
+        return true;
+    }
+    public final boolean rotate(double angle, double pivotX, double pivotY){
+        //rotation necessitates shape to be instance of Path2D
+        if(!(shape instanceof Path2D)) return false;
+        Path2D path = (Path2D)shape;
+        AffineTransform transformer = new AffineTransform();
+        transformer.setToRotation(-this.angle,this.pivotX,this.pivotY);
+        if(rotated) path.transform(transformer);
+        transformer.setToRotation(angle,pivotX,pivotY);
+        path.transform(transformer);
+        this.pivotX = pivotX;
+        this.pivotY = pivotY;
+        this.angle = angle;
+        rotated = true;
         return true;
     }
     public final void onGameTickDefault(int tick, ArrayList<GameObject> collisions){ //default behaviour per game tick
         if(sync==tick) return;
-        moveTo(x+(speedX/Constants.TICK_RATE), y+(speedY/Constants.TICK_RATE), tick); //simulate speed per tick
-        //TODO: handle if there are collisions (if collisions is not an empty set)
+        x = getX();
+        y = getY();
+        if(attatchedItem==null)
+            moveTo(x+(speedX/Constants.TICK_RATE), y+(speedY/Constants.TICK_RATE), tick); //simulate speed per tick
+        else
+            moveTo(attatchedItem.getX()+diffX, attatchedItem.getY()+diffY); //maintain attatchment
         sync = tick;
         moved = false; //reset moved boolean for the next tick
     }
@@ -99,39 +175,38 @@ public class GameObject
     public void onKeyUp(KeyEvent k){}
     
     public GameObject(){
-        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
-        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
+        shape = new Path2D.Double(new Rectangle2D.Double(0,0,10,10));
+        color = new Color(255,0,0);
         collidable = false;
-        moved = false;
-        shape = new Rectangle2D.Double(0,0,10,10);
+        x = getX();
+        y = getY();
     }
     public GameObject(Shape s){
-        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
-        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         shape = s;
-        moved = false;
+        color = new Color(255,0,0);
         collidable = false;
+        x = getX();
+        y = getY();
     }
     public GameObject(boolean collides){
-        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
-        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
+        shape = new Path2D.Double(new Rectangle2D.Double(0,0,10,10));
+        color = new Color(255,0,0);
         collidable = collides;
-        moved = false;
-        shape = new Rectangle2D.Double(0,0,10,10);
+        x = getX();
+        y = getY();
     }
     public GameObject(Shape s, boolean collides){
-        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
-        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         shape = s;
-        moved = false;
+        color = new Color(255,0,0);
         collidable = collides;
+        x = getX();
+        y = getY();
     }
     public GameObject(Shape s, Color c, boolean collides){
-        panelWidth = Constants.DEFAULT_PANEL_WIDTH;
-        panelHeight = Constants.DEFAULT_PANEL_HEIGHT;
         shape = s;
-        moved = false;
         color = c;
         collidable = collides;
+        x = getX();
+        y = getY();
     }
 }

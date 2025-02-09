@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.awt.*;
 import java.awt.event.*;
@@ -14,10 +15,14 @@ import java.awt.event.*;
 public class GamePanel extends JPanel
 {
     private int tick;
-    private HashMap<Integer,GameObject> gameItems;
+    private LinkedHashMap<Integer,GameObject> gameItems;
+    private LinkedHashMap<Integer,GameObject> keyboardGameItems;
+    private LinkedHashMap<Integer,GameObject> mouseGameItems;
     private CollisionDetector detector;
     public void removeItem(GameObject o){
         gameItems.remove(o.hashCode(),o);
+        keyboardGameItems.remove(o.hashCode(),o);
+        mouseGameItems.remove(o.hashCode(),o);
     }
     public void addItem(GameObject o){
         Dimension size = getSize();
@@ -25,6 +30,11 @@ public class GamePanel extends JPanel
         double height = size.getHeight();
         o.onPanelResize(width,height);
         gameItems.put(o.hashCode(),o);
+    }
+    public void addItem(GameObject o, boolean keyboardListener, boolean mouseListener){
+        if(keyboardListener) keyboardGameItems.put(o.hashCode(),o);
+        if(mouseListener) mouseGameItems.put(o.hashCode(),o);
+        addItem(o);
     }
     @Override
     public void paint(Graphics g){
@@ -41,7 +51,9 @@ public class GamePanel extends JPanel
         requestFocusInWindow();
         setPreferredSize(new Dimension(Constants.DEFAULT_PANEL_WIDTH, Constants.DEFAULT_PANEL_HEIGHT));
         tick = 0;
-        gameItems = new HashMap<>();
+        gameItems = new LinkedHashMap<>();
+        keyboardGameItems = new LinkedHashMap<>();
+        mouseGameItems = new LinkedHashMap<>();
         detector = new CollisionDetector();
         
         //game interval
@@ -62,15 +74,15 @@ public class GamePanel extends JPanel
         addKeyListener(new KeyAdapter(){
             @Override
             public void keyPressed(KeyEvent e){
-                for(GameObject gameObject: gameItems.values()) gameObject.onKeyDown(e);
+                for(GameObject gameObject: keyboardGameItems.values()) gameObject.onKeyDown(e);
             }
             @Override
             public void keyReleased(KeyEvent e){
-                for(GameObject gameObject: gameItems.values()) gameObject.onKeyUp(e);
+                for(GameObject gameObject: keyboardGameItems.values()) gameObject.onKeyUp(e);
             }
             @Override
             public void keyTyped(KeyEvent e){
-                for(GameObject gameObject: gameItems.values()) gameObject.onKeyPress(e);
+                for(GameObject gameObject: keyboardGameItems.values()) gameObject.onKeyPress(e);
             }
         });
         
@@ -78,23 +90,28 @@ public class GamePanel extends JPanel
         addMouseListener(new MouseAdapter(){
             @Override
             public void mousePressed(MouseEvent e) {
-                for(GameObject gameObject: gameItems.values()) gameObject.onMouseDown(e);
+                for(GameObject gameObject: mouseGameItems.values())
+                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
             }
             @Override
             public void mouseReleased(MouseEvent e){
-                for(GameObject gameObject: gameItems.values()) gameObject.onMouseUp(e);
+                for(GameObject gameObject: mouseGameItems.values())
+                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
             }
             @Override
             public void mouseClicked(MouseEvent e){
-                for(GameObject gameObject: gameItems.values()) gameObject.onMouseClick(e);
+                for(GameObject gameObject: mouseGameItems.values())
+                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
             }
             @Override
             public void mouseMoved(MouseEvent e){
-                for(GameObject gameObject: gameItems.values()) gameObject.onMouseMove(e);
+                for(GameObject gameObject: mouseGameItems.values())
+                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
             }
             @Override
             public void mouseDragged(MouseEvent e){
-                for(GameObject gameObject: gameItems.values()) gameObject.onMouseDrag(e);
+                for(GameObject gameObject: mouseGameItems.values())
+                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
             }
         });
         
