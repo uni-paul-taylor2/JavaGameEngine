@@ -1,3 +1,5 @@
+package JavaGameEngine;
+
 import java.awt.*;
 import java.awt.geom.*;
 

@@ -1,3 +1,5 @@
+package JavaGameEngine;
+
 
 /**
  * Holds all constants for the application
