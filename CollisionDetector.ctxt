@@ -1,8 +1,0 @@
-#BlueJ class context
-comment0.target=CollisionDetector
-comment0.text=\r\n\ Gotta\ love\ Java\ and\ their\ abstraction\ called\ Area\ ;-;\r\n\r\n\ @author\ (Paul\ Taylor)\r\n\ @version\ (31st/1/2025)\r\n
-comment1.params=
-comment1.target=CollisionDetector()
-comment2.params=s1\ s2
-comment2.target=boolean\ detected(java.awt.Shape,\ java.awt.Shape)
-numComments=3
