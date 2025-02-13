@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Iterator;
 
 /**
  * Manages the timing and rendering of instances of GameObject
@@ -26,12 +27,18 @@ public class GamePanel extends JPanel
         keyboardGameItems.remove(o.hashCode(),o);
         mouseGameItems.remove(o.hashCode(),o);
     }
+    public void removeItem(CompositeGameObject o){
+        o.removeFromPanel(this);
+    }
     public void addItem(GameObject o){
         Dimension size = getSize();
         double width = size.getWidth();
         double height = size.getHeight();
         o.onPanelResize(width,height);
         gameItems.put(o.hashCode(),o);
+    }
+    public void addItem(CompositeGameObject o){
+        o.addToPanel(this);
     }
     public void addItem(GameObject o, boolean keyboardListener, boolean mouseListener){
         if(keyboardListener) keyboardGameItems.put(o.hashCode(),o);
@@ -64,7 +71,8 @@ public class GamePanel extends JPanel
             public void actionPerformed(ActionEvent e) {
                 tick++;
                 HashMap<GameObject,ArrayList<GameObject>> collisions = getCollisions();
-                for(GameObject gameObject: gameItems.values()){
+                for(Iterator<GameObject> curr=gameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
                     gameObject.onGameTick(tick,collisions.get(gameObject));
                 }
                 repaint();
@@ -76,15 +84,24 @@ public class GamePanel extends JPanel
         addKeyListener(new KeyAdapter(){
             @Override
             public void keyPressed(KeyEvent e){
-                for(GameObject gameObject: keyboardGameItems.values()) gameObject.onKeyDown(e);
+                for(Iterator<GameObject> curr=keyboardGameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
+                    gameObject.onKeyDown(e);
+                }
             }
             @Override
             public void keyReleased(KeyEvent e){
-                for(GameObject gameObject: keyboardGameItems.values()) gameObject.onKeyUp(e);
+                for(Iterator<GameObject> curr=keyboardGameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
+                    gameObject.onKeyUp(e);
+                }
             }
             @Override
             public void keyTyped(KeyEvent e){
-                for(GameObject gameObject: keyboardGameItems.values()) gameObject.onKeyPress(e);
+                for(Iterator<GameObject> curr=keyboardGameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
+                    gameObject.onKeyPress(e);
+                }
             }
         });
         
@@ -92,28 +109,38 @@ public class GamePanel extends JPanel
         addMouseListener(new MouseAdapter(){
             @Override
             public void mousePressed(MouseEvent e) {
-                for(GameObject gameObject: mouseGameItems.values())
+                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
+                }
             }
             @Override
             public void mouseReleased(MouseEvent e){
-                for(GameObject gameObject: mouseGameItems.values())
-                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
+                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
+                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseUp(e);
+                }
             }
             @Override
             public void mouseClicked(MouseEvent e){
-                for(GameObject gameObject: mouseGameItems.values())
-                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
+                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
+                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseClick(e);
+                }
             }
             @Override
             public void mouseMoved(MouseEvent e){
-                for(GameObject gameObject: mouseGameItems.values())
-                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
+                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
+                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseMove(e);
+                }
             }
             @Override
             public void mouseDragged(MouseEvent e){
-                for(GameObject gameObject: mouseGameItems.values())
-                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
+                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
+                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDrag(e);
+                }
             }
         });
         
@@ -124,7 +151,10 @@ public class GamePanel extends JPanel
                 Dimension size = getSize();
                 double width = size.getWidth();
                 double height = size.getHeight();
-                for(GameObject gameObject: gameItems.values()) gameObject.onPanelResize(width,height);
+                for(Iterator<GameObject> curr=gameItems.values().iterator(); curr.hasNext();){
+                    GameObject gameObject = curr.next();
+                    gameObject.onPanelResize(width,height);
+                }
             }
         });
     }
