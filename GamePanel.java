@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.ArrayList;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Iterator;
 
 /**
  * Manages the timing and rendering of instances of GameObject
@@ -21,26 +20,30 @@ public class GamePanel extends JPanel
     private LinkedHashMap<Integer,GameObject> gameItems;
     private LinkedHashMap<Integer,GameObject> keyboardGameItems;
     private LinkedHashMap<Integer,GameObject> mouseGameItems;
+    private LinkedHashMap<Integer,GameObject> deletedGameItems;
     private CollisionDetector detector;
-    public void removeItem(GameObject o){
+    public synchronized void properlyRemoveItem(GameObject o){
         gameItems.remove(o.hashCode(),o);
         keyboardGameItems.remove(o.hashCode(),o);
         mouseGameItems.remove(o.hashCode(),o);
     }
-    public void removeItem(CompositeGameObject o){
+    public synchronized void removeItem(GameObject o){
+        deletedGameItems.put(o.hashCode(),o);
+    }
+    public synchronized void removeItem(CompositeGameObject o){
         o.removeFromPanel(this);
     }
-    public void addItem(GameObject o){
+    public synchronized void addItem(GameObject o){
         Dimension size = getSize();
         double width = size.getWidth();
         double height = size.getHeight();
         o.onPanelResize(width,height);
         gameItems.put(o.hashCode(),o);
     }
-    public void addItem(CompositeGameObject o){
+    public synchronized void addItem(CompositeGameObject o){
         o.addToPanel(this);
     }
-    public void addItem(GameObject o, boolean keyboardListener, boolean mouseListener){
+    public synchronized void addItem(GameObject o, boolean keyboardListener, boolean mouseListener){
         if(keyboardListener) keyboardGameItems.put(o.hashCode(),o);
         if(mouseListener) mouseGameItems.put(o.hashCode(),o);
         addItem(o);
@@ -50,6 +53,7 @@ public class GamePanel extends JPanel
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
         for(GameObject gameObject: gameItems.values()){
+            if(deletedGameItems.get(gameObject)!=null) continue;
             g2.setColor(gameObject.getColor());
             g2.fill(gameObject.getShape());
         }
@@ -63,6 +67,7 @@ public class GamePanel extends JPanel
         gameItems = new LinkedHashMap<>();
         keyboardGameItems = new LinkedHashMap<>();
         mouseGameItems = new LinkedHashMap<>();
+        deletedGameItems = new LinkedHashMap<>();
         detector = new CollisionDetector();
         
         //game interval
@@ -70,11 +75,12 @@ public class GamePanel extends JPanel
         Timer interval = new Timer(ms,new ActionListener(){
             public void actionPerformed(ActionEvent e) {
                 tick++;
+                for(GameObject item: deletedGameItems.values()) properlyRemoveItem(item);
+                deletedGameItems.clear();
                 HashMap<GameObject,ArrayList<GameObject>> collisions = getCollisions();
-                for(Iterator<GameObject> curr=gameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                ArrayList<GameObject> gameObjectsCopy = new ArrayList<>(gameItems.values()); //solves concurrency
+                for(GameObject gameObject: gameObjectsCopy)
                     gameObject.onGameTick(tick,collisions.get(gameObject));
-                }
                 repaint();
             }
         });
@@ -84,22 +90,22 @@ public class GamePanel extends JPanel
         addKeyListener(new KeyAdapter(){
             @Override
             public void keyPressed(KeyEvent e){
-                for(Iterator<GameObject> curr=keyboardGameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                for(GameObject gameObject: keyboardGameItems.values()){
+                    if(deletedGameItems.get(gameObject)!=null) continue;
                     gameObject.onKeyDown(e);
                 }
             }
             @Override
             public void keyReleased(KeyEvent e){
-                for(Iterator<GameObject> curr=keyboardGameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                for(GameObject gameObject: keyboardGameItems.values()){
+                    if(deletedGameItems.get(gameObject)!=null) continue;
                     gameObject.onKeyUp(e);
                 }
             }
             @Override
             public void keyTyped(KeyEvent e){
-                for(Iterator<GameObject> curr=keyboardGameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                for(GameObject gameObject: keyboardGameItems.values()){
+                    if(deletedGameItems.get(gameObject)!=null) continue;
                     gameObject.onKeyPress(e);
                 }
             }
@@ -109,36 +115,36 @@ public class GamePanel extends JPanel
         addMouseListener(new MouseAdapter(){
             @Override
             public void mousePressed(MouseEvent e) {
-                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                for(GameObject gameObject: mouseGameItems.values()){
+                    if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
                 }
             }
             @Override
             public void mouseReleased(MouseEvent e){
-                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                for(GameObject gameObject: mouseGameItems.values()){
+                    if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseUp(e);
                 }
             }
             @Override
             public void mouseClicked(MouseEvent e){
-                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                for(GameObject gameObject: mouseGameItems.values()){
+                    if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseClick(e);
                 }
             }
             @Override
             public void mouseMoved(MouseEvent e){
-                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                for(GameObject gameObject: mouseGameItems.values()){
+                    if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseMove(e);
                 }
             }
             @Override
             public void mouseDragged(MouseEvent e){
-                for(Iterator<GameObject> curr=mouseGameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                for(GameObject gameObject: mouseGameItems.values()){
+                    if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDrag(e);
                 }
             }
@@ -151,15 +157,15 @@ public class GamePanel extends JPanel
                 Dimension size = getSize();
                 double width = size.getWidth();
                 double height = size.getHeight();
-                for(Iterator<GameObject> curr=gameItems.values().iterator(); curr.hasNext();){
-                    GameObject gameObject = curr.next();
+                for(GameObject gameObject: gameItems.values()){
+                    if(deletedGameItems.get(gameObject)!=null) continue;
                     gameObject.onPanelResize(width,height);
                 }
             }
         });
     }
     
-    private HashMap<GameObject,ArrayList<GameObject>> getCollisions(){
+    private synchronized HashMap<GameObject,ArrayList<GameObject>> getCollisions(){
         HashMap<GameObject,ArrayList<GameObject>> collisions = new HashMap();
         for(GameObject item: gameItems.values()){
             ArrayList<GameObject> itemCollisions = new ArrayList<>();
