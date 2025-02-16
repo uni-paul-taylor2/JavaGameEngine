@@ -17,6 +17,11 @@ import java.awt.event.*;
 public class GamePanel extends JPanel
 {
     private int tick;
+    public int getTick(){return tick;}
+    private boolean stopped=true;
+    public boolean isStopped(){return stopped;}
+    private Timer interval=null;
+    private ActionListener timerFn;
     private LinkedHashMap<Integer,GameObject> gameItems;
     private LinkedHashMap<Integer,GameObject> keyboardGameItems;
     private LinkedHashMap<Integer,GameObject> mouseGameItems;
@@ -59,37 +64,73 @@ public class GamePanel extends JPanel
         }
     }
     
+    public void onMouseDrag(MouseEvent m){}
+    public void onMouseMove(MouseEvent m){}
+    public void onMouseDown(MouseEvent m){}
+    public void onMouseUp(MouseEvent m){}
+    public void onMouseClick(MouseEvent m){} //the mouse was pressed and released
+    public void onKeyPress(KeyEvent k){} //a key was pressed and released
+    public void onKeyDown(KeyEvent k){}
+    public void onKeyUp(KeyEvent k){}
+    public void onPanelResize(double width, double height){}
+    public final void stop(){
+        if(stopped) return;
+        if(interval!=null) interval.stop();
+        ArrayList<GameObject> gameObjectsCopy = new ArrayList<>(gameItems.values()); //copy solves concurrency
+        for(GameObject item: gameObjectsCopy) removeItem(item);
+        stopped = true;
+        interval = null;
+    }
+    public final void start(){
+        if(!stopped) return;
+        int ms = 1000/Constants.TICK_RATE;
+        interval = new Timer(ms,timerFn);
+        tick = 0;
+        interval.start();
+        stopped = false;
+    }
+    public void pause(){
+        if(interval!=null) interval.stop();
+        interval = null;
+    }
+    public void resume(){
+        if(interval!=null) return;
+        int ms = 1000/Constants.TICK_RATE;
+        interval = new Timer(ms,timerFn);
+        interval.start();
+    }
+    public void perTickCallback(){}
+    
     public GamePanel(){
         setFocusable(true);
         requestFocusInWindow();
         setPreferredSize(new Dimension(Constants.DEFAULT_PANEL_WIDTH, Constants.DEFAULT_PANEL_HEIGHT));
-        tick = 0;
         gameItems = new LinkedHashMap<>();
         keyboardGameItems = new LinkedHashMap<>();
         mouseGameItems = new LinkedHashMap<>();
         deletedGameItems = new LinkedHashMap<>();
         detector = new CollisionDetector();
         
-        //game interval
-        int ms = 1000/Constants.TICK_RATE;
-        Timer interval = new Timer(ms,new ActionListener(){
-            public void actionPerformed(ActionEvent e) {
+        timerFn = new ActionListener(){
+            public void actionPerformed(ActionEvent e){
                 tick++;
                 for(GameObject item: deletedGameItems.values()) properlyRemoveItem(item);
                 deletedGameItems.clear();
+                perTickCallback();
                 HashMap<GameObject,ArrayList<GameObject>> collisions = getCollisions();
-                ArrayList<GameObject> gameObjectsCopy = new ArrayList<>(gameItems.values()); //solves concurrency
+                ArrayList<GameObject> gameObjectsCopy = new ArrayList<>(gameItems.values()); //copy solves concurrency
                 for(GameObject gameObject: gameObjectsCopy)
                     gameObject.onGameTick(tick,collisions.get(gameObject));
+                if(stopped) return;
                 repaint();
             }
-        });
-        interval.start();
+        };
         
         //keyboard listener
         addKeyListener(new KeyAdapter(){
             @Override
             public void keyPressed(KeyEvent e){
+                onKeyDown(e);
                 for(GameObject gameObject: keyboardGameItems.values()){
                     if(deletedGameItems.get(gameObject)!=null) continue;
                     gameObject.onKeyDown(e);
@@ -97,6 +138,7 @@ public class GamePanel extends JPanel
             }
             @Override
             public void keyReleased(KeyEvent e){
+                onKeyUp(e);
                 for(GameObject gameObject: keyboardGameItems.values()){
                     if(deletedGameItems.get(gameObject)!=null) continue;
                     gameObject.onKeyUp(e);
@@ -104,6 +146,7 @@ public class GamePanel extends JPanel
             }
             @Override
             public void keyTyped(KeyEvent e){
+                onKeyPress(e);
                 for(GameObject gameObject: keyboardGameItems.values()){
                     if(deletedGameItems.get(gameObject)!=null) continue;
                     gameObject.onKeyPress(e);
@@ -114,7 +157,8 @@ public class GamePanel extends JPanel
         //mouse listener
         addMouseListener(new MouseAdapter(){
             @Override
-            public void mousePressed(MouseEvent e) {
+            public void mousePressed(MouseEvent e){
+                onMouseDown(e);
                 for(GameObject gameObject: mouseGameItems.values()){
                     if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
@@ -122,6 +166,7 @@ public class GamePanel extends JPanel
             }
             @Override
             public void mouseReleased(MouseEvent e){
+                onMouseUp(e);
                 for(GameObject gameObject: mouseGameItems.values()){
                     if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseUp(e);
@@ -129,6 +174,7 @@ public class GamePanel extends JPanel
             }
             @Override
             public void mouseClicked(MouseEvent e){
+                onMouseClick(e);
                 for(GameObject gameObject: mouseGameItems.values()){
                     if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseClick(e);
@@ -136,6 +182,7 @@ public class GamePanel extends JPanel
             }
             @Override
             public void mouseMoved(MouseEvent e){
+                onMouseMove(e);
                 for(GameObject gameObject: mouseGameItems.values()){
                     if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseMove(e);
@@ -143,6 +190,7 @@ public class GamePanel extends JPanel
             }
             @Override
             public void mouseDragged(MouseEvent e){
+                onMouseDrag(e);
                 for(GameObject gameObject: mouseGameItems.values()){
                     if(deletedGameItems.get(gameObject)!=null) continue;
                     if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDrag(e);
@@ -157,6 +205,7 @@ public class GamePanel extends JPanel
                 Dimension size = getSize();
                 double width = size.getWidth();
                 double height = size.getHeight();
+                onPanelResize(width,height);
                 for(GameObject gameObject: gameItems.values()){
                     if(deletedGameItems.get(gameObject)!=null) continue;
                     gameObject.onPanelResize(width,height);

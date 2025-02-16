@@ -155,11 +155,11 @@ public class GameObject
         onGameTickDefault(tick,collisions);
     }
     public final void onPanelResizeDefault(double width, double height){ //default behaviour on game panel resize
-        if(panelWidth<1 || panelHeight<1) return;
-        double ratioWidth = width/panelWidth;
-        double ratioHeight = height/panelHeight;
-        speedX *= ratioWidth;
-        speedY *= ratioHeight;
+        //if(panelWidth<1 || panelHeight<1) return;
+        //double ratioWidth = width/panelWidth;
+        //double ratioHeight = height/panelHeight;
+        //speedX *= ratioWidth;
+        //speedY *= ratioHeight;
         panelWidth = width;
         panelHeight = height;
     }
