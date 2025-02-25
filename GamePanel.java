@@ -27,6 +27,9 @@ public class GamePanel extends JPanel
     private LinkedHashMap<Integer,GameObject> mouseGameItems;
     private LinkedHashMap<Integer,GameObject> deletedGameItems;
     private CollisionDetector detector;
+    private ArrayList<MouseEvent> mouseEvents;
+    private ArrayList<KeyEvent> keyboardEvents;
+    
     public synchronized void properlyRemoveItem(GameObject o){
         gameItems.remove(o.hashCode(),o);
         keyboardGameItems.remove(o.hashCode(),o);
@@ -64,6 +67,42 @@ public class GamePanel extends JPanel
         }
     }
     
+    public final void handleEvent(MouseEvent m){
+        switch(m.getID()){
+            case MouseEvent.MOUSE_CLICKED:
+                onMouseClick(m);
+                break;
+            case MouseEvent.MOUSE_PRESSED:
+                onMouseDown(m);
+                break;
+            case MouseEvent.MOUSE_RELEASED:
+                onMouseUp(m);
+                break;
+            case MouseEvent.MOUSE_MOVED:
+                onMouseMove(m);
+                break;
+            case MouseEvent.MOUSE_DRAGGED:
+                onMouseDrag(m);
+                break;
+            default:
+                break;
+        }
+    }
+    public final void handleEvent(KeyEvent k){
+        switch(k.getID()){
+            case KeyEvent.KEY_PRESSED:
+                onKeyDown(k);
+                break;
+            case KeyEvent.KEY_RELEASED:
+                onKeyUp(k);
+                break;
+            case KeyEvent.KEY_TYPED:
+                onKeyPress(k);
+                break;
+            default:
+                break;
+        }
+    }
     public void onMouseDrag(MouseEvent m){}
     public void onMouseMove(MouseEvent m){}
     public void onMouseDown(MouseEvent m){}
@@ -73,6 +112,7 @@ public class GamePanel extends JPanel
     public void onKeyDown(KeyEvent k){}
     public void onKeyUp(KeyEvent k){}
     public void onPanelResize(double width, double height){}
+    
     public final void stop(){
         if(stopped) return;
         if(interval!=null) interval.stop();
@@ -109,6 +149,8 @@ public class GamePanel extends JPanel
         keyboardGameItems = new LinkedHashMap<>();
         mouseGameItems = new LinkedHashMap<>();
         deletedGameItems = new LinkedHashMap<>();
+        mouseEvents = new ArrayList<>();
+        keyboardEvents = new ArrayList<>();
         detector = new CollisionDetector();
         
         timerFn = new ActionListener(){
@@ -119,8 +161,13 @@ public class GamePanel extends JPanel
                 perTickCallback();
                 HashMap<GameObject,ArrayList<GameObject>> collisions = getCollisions();
                 ArrayList<GameObject> gameObjectsCopy = new ArrayList<>(gameItems.values()); //copy solves concurrency
-                for(GameObject gameObject: gameObjectsCopy)
+                for(GameObject gameObject: gameObjectsCopy){
                     gameObject.onGameTick(tick,collisions.get(gameObject));
+                    for(MouseEvent ev: mouseEvents) gameObject.handleEvent(ev);
+                    for(KeyEvent ev: keyboardEvents) gameObject.handleEvent(ev);
+                }
+                mouseEvents.clear();
+                keyboardEvents.clear();
                 if(stopped) return;
                 repaint();
             }
@@ -130,27 +177,18 @@ public class GamePanel extends JPanel
         addKeyListener(new KeyAdapter(){
             @Override
             public void keyPressed(KeyEvent e){
-                onKeyDown(e);
-                for(GameObject gameObject: keyboardGameItems.values()){
-                    if(deletedGameItems.get(gameObject)!=null) continue;
-                    gameObject.onKeyDown(e);
-                }
+                keyboardEvents.add(e);
+                handleEvent(e);
             }
             @Override
             public void keyReleased(KeyEvent e){
-                onKeyUp(e);
-                for(GameObject gameObject: keyboardGameItems.values()){
-                    if(deletedGameItems.get(gameObject)!=null) continue;
-                    gameObject.onKeyUp(e);
-                }
+                keyboardEvents.add(e);
+                handleEvent(e);
             }
             @Override
             public void keyTyped(KeyEvent e){
-                onKeyPress(e);
-                for(GameObject gameObject: keyboardGameItems.values()){
-                    if(deletedGameItems.get(gameObject)!=null) continue;
-                    gameObject.onKeyPress(e);
-                }
+                keyboardEvents.add(e);
+                handleEvent(e);
             }
         });
         
@@ -158,43 +196,28 @@ public class GamePanel extends JPanel
         addMouseListener(new MouseAdapter(){
             @Override
             public void mousePressed(MouseEvent e){
-                onMouseDown(e);
-                for(GameObject gameObject: mouseGameItems.values()){
-                    if(deletedGameItems.get(gameObject)!=null) continue;
-                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDown(e);
-                }
+                mouseEvents.add(e);
+                handleEvent(e);
             }
             @Override
             public void mouseReleased(MouseEvent e){
-                onMouseUp(e);
-                for(GameObject gameObject: mouseGameItems.values()){
-                    if(deletedGameItems.get(gameObject)!=null) continue;
-                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseUp(e);
-                }
+                mouseEvents.add(e);
+                handleEvent(e);
             }
             @Override
             public void mouseClicked(MouseEvent e){
-                onMouseClick(e);
-                for(GameObject gameObject: mouseGameItems.values()){
-                    if(deletedGameItems.get(gameObject)!=null) continue;
-                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseClick(e);
-                }
+                mouseEvents.add(e);
+                handleEvent(e);
             }
             @Override
             public void mouseMoved(MouseEvent e){
-                onMouseMove(e);
-                for(GameObject gameObject: mouseGameItems.values()){
-                    if(deletedGameItems.get(gameObject)!=null) continue;
-                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseMove(e);
-                }
+                mouseEvents.add(e);
+                handleEvent(e);
             }
             @Override
             public void mouseDragged(MouseEvent e){
-                onMouseDrag(e);
-                for(GameObject gameObject: mouseGameItems.values()){
-                    if(deletedGameItems.get(gameObject)!=null) continue;
-                    if(gameObject.getShape().contains(e.getPoint())) gameObject.onMouseDrag(e);
-                }
+                mouseEvents.add(e);
+                handleEvent(e);
             }
         });
         

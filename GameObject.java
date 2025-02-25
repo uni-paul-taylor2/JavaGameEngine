@@ -167,6 +167,42 @@ public class GameObject
         onPanelResizeDefault(width,height);
     }
     
+    public final void handleEvent(MouseEvent m){
+        switch(m.getID()){
+            case MouseEvent.MOUSE_CLICKED:
+                onMouseClick(m);
+                break;
+            case MouseEvent.MOUSE_PRESSED:
+                onMouseDown(m);
+                break;
+            case MouseEvent.MOUSE_RELEASED:
+                onMouseUp(m);
+                break;
+            case MouseEvent.MOUSE_MOVED:
+                onMouseMove(m);
+                break;
+            case MouseEvent.MOUSE_DRAGGED:
+                onMouseDrag(m);
+                break;
+            default:
+                break;
+        }
+    }
+    public final void handleEvent(KeyEvent k){
+        switch(k.getID()){
+            case KeyEvent.KEY_PRESSED:
+                onKeyDown(k);
+                break;
+            case KeyEvent.KEY_RELEASED:
+                onKeyUp(k);
+                break;
+            case KeyEvent.KEY_TYPED:
+                onKeyPress(k);
+                break;
+            default:
+                break;
+        }
+    }
     public void onMouseDrag(MouseEvent m){}
     public void onMouseMove(MouseEvent m){}
     public void onMouseDown(MouseEvent m){}
