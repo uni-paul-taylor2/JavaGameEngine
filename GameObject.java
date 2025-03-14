@@ -6,6 +6,9 @@ import java.awt.geom.*;
 import java.awt.event.*;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.*;
 
 /**
  * Every item in this game should be an instance of this
@@ -25,12 +28,15 @@ public class GameObject
     protected Color color;
     protected double speedX=0; //pixels per second horizontally
     protected double speedY=0; //pixels per second vertically
+    protected double accelX=0;
+    protected double accelY=0;
     protected boolean moved=false;
     protected double panelWidth=Constants.DEFAULT_PANEL_WIDTH;
     protected double panelHeight=Constants.DEFAULT_PANEL_HEIGHT;
     protected boolean collidable;
     protected GameObject attatchedItem=null;
     protected double diffX=0, diffY=0; //difference in position between self and attatchedItem
+    protected BufferedImage img=null;
     
     public static final Path2D Rotate(Shape s, double angle, double pivotX, double pivotY){
         Path2D path = new Path2D.Double(s);
@@ -71,6 +77,23 @@ public class GameObject
     public final void setSpeed(double x_speed, double y_speed){
         speedX = x_speed;
         speedY = y_speed;
+    }
+    public final void setAcceleration(double accel_x, double accel_y){
+        accelX = accel_x;
+        accelY = accel_y;
+    }
+    public final void setAcceleration(double accel_x, double accel_y, boolean resetSpeed){
+        if(resetSpeed){
+            speedX=0;
+            speedY=0;
+        }
+        setAcceleration(accel_x, accel_y);
+    }
+    public final BufferedImage getImage(){
+        return img;
+    }
+    public final boolean hasImage(){
+        return getImage()!=null;
     }
     public final boolean isCollidable(){
         return collidable;
@@ -144,8 +167,11 @@ public class GameObject
         if(sync==tick) return;
         x = getX();
         y = getY();
+        double rate = Constants.TICK_RATE;
+        speedX += accelX/rate;
+        speedY += accelY/rate;
         if(attatchedItem==null)
-            moveTo(x+(speedX/Constants.TICK_RATE), y+(speedY/Constants.TICK_RATE), tick); //simulate speed per tick
+            moveTo(x+(speedX/rate), y+(speedY/rate), tick); //simulate speed per tick
         else
             moveTo(attatchedItem.getX()+diffX, attatchedItem.getY()+diffY); //maintain attatchment
         sync = tick;
@@ -214,28 +240,28 @@ public class GameObject
     
     public GameObject(){
         shape = new Path2D.Double(new Rectangle2D.Double(0,0,10,10));
-        color = new Color(255,0,0);
+        color = new Color(0,0,0,0);
         collidable = false;
         x = getX();
         y = getY();
     }
     public GameObject(Shape s){
         shape = s;
-        color = new Color(255,0,0);
+        color = new Color(0,0,0,0);
         collidable = false;
         x = getX();
         y = getY();
     }
     public GameObject(boolean collides){
         shape = new Path2D.Double(new Rectangle2D.Double(0,0,10,10));
-        color = new Color(255,0,0);
+        color = new Color(0,0,0,0);
         collidable = collides;
         x = getX();
         y = getY();
     }
     public GameObject(Shape s, boolean collides){
         shape = s;
-        color = new Color(255,0,0);
+        color = new Color(0,0,0,0);
         collidable = collides;
         x = getX();
         y = getY();
@@ -246,5 +272,57 @@ public class GameObject
         collidable = collides;
         x = getX();
         y = getY();
+    }
+    public GameObject(String imageFileName){
+        try{
+            collidable = false;
+            img = ImageIO.read(new File(imageFileName));
+            shape = new Rectangle2D.Double(0,0,img.getWidth(),img.getHeight());
+            color = new Color(0,0,0,0);
+            x = getX();
+            y = getY();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    public GameObject(String imageFileName, boolean collides){
+        try{
+            collidable = collides;
+            img = ImageIO.read(new File(imageFileName));
+            shape = new Rectangle2D.Double(0,0,img.getWidth(),img.getHeight());
+            color = new Color(0,0,0,0);
+            x = getX();
+            y = getY();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    public GameObject(String imageFileName, int X, int Y){
+        try{
+            collidable = false;
+            img = ImageIO.read(new File(imageFileName));
+            shape = new Rectangle2D.Double(X,Y,img.getWidth(),img.getHeight());
+            color = new Color(0,0,0,0);
+            x = getX();
+            y = getY();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
+    }
+    public GameObject(String imageFileName, int X, int Y, boolean collides, Color c){
+        try{
+            collidable = collides;
+            img = ImageIO.read(new File(imageFileName));
+            shape = new Rectangle2D.Double(X,Y,img.getWidth(),img.getHeight());
+            color = c;
+            x = getX();
+            y = getY();
+        }
+        catch(IOException e){
+            e.printStackTrace();
+        }
     }
 }

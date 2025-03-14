@@ -62,6 +62,9 @@ public class GamePanel extends JPanel
         Graphics2D g2 = (Graphics2D) g;
         for(GameObject gameObject: gameItems.values()){
             if(deletedGameItems.get(gameObject)!=null) continue;
+            if(gameObject.hasImage()){
+                g2.drawImage(gameObject.getImage(), (int)gameObject.getX(), (int)gameObject.getY(), this);
+            }
             g2.setColor(gameObject.getColor());
             g2.fill(gameObject.getShape());
         }
