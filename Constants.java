@@ -12,6 +12,6 @@ public interface Constants
     int TICK_RATE=20; //the amount of ticks per second
     int DEFAULT_PANEL_WIDTH=600;
     int DEFAULT_PANEL_HEIGHT=400;
-    double GRAVITY=70*TICK_RATE; //pixels per second
+    double GRAVITY=1400; //pixels per second
     //other constants soon (or maybe not lol)
 }

@@ -102,7 +102,7 @@ public class GameObject
     protected boolean validPos(double X, double Y){ //for an external programmer to determine if a spot is valid to move to or not
         return true;
     }
-    protected final boolean moveTo(double X, double Y){ //for use by an external programmer
+    public final boolean moveTo(double X, double Y){ //for use by an external programmer
         if(!validPos(X,Y)) return false;
         if(!moved) sync++;
         AffineTransform transformer = new AffineTransform();
@@ -118,7 +118,7 @@ public class GameObject
         y = getY();
         return true;
     }
-    protected final boolean moveTo(double X, double Y, int tick){ //for use by an instance of GamePanel
+    public final boolean moveTo(double X, double Y, int tick){ //for use by an instance of GamePanel
         if(!validPos(X,Y)) return false;
         sync = tick;
         moved = true;
