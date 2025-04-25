@@ -10,8 +10,8 @@ public class ScrollingImage implements CompositeGameObject
 {
     private GameObject main=null;
     private GameObject left=null, right=null, up=null, down=null, upLeft=null, downLeft=null, upRight=null, downRight=null;
-    private double X=0, Y=0;
-    int height=0, width=0;
+    private double X=0, Y=0, scrollFactor=1;
+    private int height=0, width=0;
     @Override
     public void addToPanel(GamePanel p){
         p.addItem(main);
@@ -38,6 +38,8 @@ public class ScrollingImage implements CompositeGameObject
     }
     
     public void scroll(double shiftX, double shiftY){
+        shiftX *= scrollFactor;
+        shiftY *= scrollFactor;
         X += shiftX;
         Y += shiftY;
         
@@ -57,10 +59,11 @@ public class ScrollingImage implements CompositeGameObject
         
         main.moveTo(X,Y);
     }
-    public ScrollingImage(String imageFileName, int x, int y)
+    public ScrollingImage(String imageFileName, int x, int y, double factor)
     {
         X = x;
         Y = y;
+        scrollFactor = factor;
         main = new GameObject(imageFileName);
         height = main.getImage().getHeight();
         width = main.getImage().getWidth();
@@ -83,30 +86,15 @@ public class ScrollingImage implements CompositeGameObject
         upRight.attatchTo(main);
         downRight.attatchTo(main);
     }
+    public ScrollingImage(String imageFileName, int x, int y)
+    {
+        this(imageFileName, x, y, 1);
+    }
     public ScrollingImage(String imageFileName)
     {
-        int x=(int)X;
-        int y=(int)Y;
-        main = new GameObject(imageFileName);
-        height = main.getImage().getHeight();
-        width = main.getImage().getWidth();
-        
-        left = new GameObject(imageFileName, -width, y);
-        right = new GameObject(imageFileName, width, y);
-        up = new GameObject(imageFileName, x, -height);
-        down = new GameObject(imageFileName, x, height);
-        upLeft = new GameObject(imageFileName, -width, -height);
-        downLeft = new GameObject(imageFileName, -width, height);
-        upRight = new GameObject(imageFileName, width, -height);
-        downRight = new GameObject(imageFileName, width, height);
-        
-        left.attatchTo(main);
-        right.attatchTo(main);
-        up.attatchTo(main);
-        down.attatchTo(main);
-        upLeft.attatchTo(main);
-        downLeft.attatchTo(main);
-        upRight.attatchTo(main);
-        downRight.attatchTo(main);
+        this(imageFileName, 0, 0, 1);
+    }
+    public ScrollingImage(String imageFileName, double factor){
+        this(imageFileName, 0, 0, factor);
     }
 }

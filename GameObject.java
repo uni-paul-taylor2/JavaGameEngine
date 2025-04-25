@@ -37,6 +37,7 @@ public class GameObject
     protected GameObject attatchedItem=null;
     protected double diffX=0, diffY=0; //difference in position between self and attatchedItem
     protected BufferedImage img=null;
+    protected CompositeGameObject parent;
     
     public static final Path2D Rotate(Shape s, double angle, double pivotX, double pivotY){
         Path2D path = new Path2D.Double(s);
@@ -46,6 +47,12 @@ public class GameObject
         return path;
     }
     
+    public void setParent(CompositeGameObject p){
+        parent = p;
+    }
+    public CompositeGameObject getParent(){
+        return parent;
+    }
     public final double getX(){
         if(!rotated) return shape.getBounds2D().getX();
         Shape original = Rotate(shape,-angle,pivotX,pivotY);
@@ -132,6 +139,9 @@ public class GameObject
     }
     public final void attatchItem(GameObject o){
         o.attatchTo(this);
+    }
+    public final GameObject getAttatchedItem(){
+        return attatchedItem;
     }
     public final boolean rotate(double angle){
         //rotation necessitates shape to be instance of Path2D
