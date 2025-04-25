@@ -34,8 +34,8 @@ public class GameObject
     protected double panelWidth=Constants.DEFAULT_PANEL_WIDTH;
     protected double panelHeight=Constants.DEFAULT_PANEL_HEIGHT;
     protected boolean collidable;
-    protected GameObject attatchedItem=null;
-    protected double diffX=0, diffY=0; //difference in position between self and attatchedItem
+    protected GameObject attachedItem=null;
+    protected double diffX=0, diffY=0; //difference in position between self and attachedItem
     protected BufferedImage img=null;
     protected CompositeGameObject parent;
     
@@ -47,12 +47,8 @@ public class GameObject
         return path;
     }
     
-    public void setParent(CompositeGameObject p){
-        parent = p;
-    }
-    public CompositeGameObject getParent(){
-        return parent;
-    }
+    public void setParent(CompositeGameObject p){parent = p;}
+    public CompositeGameObject getParent(){return parent;}
     public final double getX(){
         if(!rotated) return shape.getBounds2D().getX();
         Shape original = Rotate(shape,-angle,pivotX,pivotY);
@@ -63,24 +59,12 @@ public class GameObject
         Shape original = Rotate(shape,-angle,pivotX,pivotY);
         return original.getBounds2D().getY();
     }
-    public final Shape getShape(){
-        return shape;
-    }
-    public final void setShape(Shape s){
-        shape = s;
-    }
-    public final Color getColor(){
-        return color;
-    }
-    public final void setColor(Color c){
-        color = c;
-    }
-    public final double getSpeedX(){
-        return speedX;
-    }
-    public final double getSpeedY(){
-        return speedY;
-    }
+    public final Shape getShape(){return shape;}
+    public final void setShape(Shape s){shape = s;}
+    public final Color getColor(){return color;}
+    public final void setColor(Color c){color = c;}
+    public final double getSpeedX(){return speedX;}
+    public final double getSpeedY(){return speedY;}
     public final void setSpeed(double x_speed, double y_speed){
         speedX = x_speed;
         speedY = y_speed;
@@ -96,26 +80,19 @@ public class GameObject
         }
         setAcceleration(accel_x, accel_y);
     }
-    public final BufferedImage getImage(){
-        return img;
-    }
-    public final boolean hasImage(){
-        return getImage()!=null;
-    }
-    public final boolean isCollidable(){
-        return collidable;
-    }
+    public final BufferedImage getImage(){return img;}
+    public final boolean hasImage(){return getImage()!=null;}
+    public final boolean isCollidable(){return collidable;}
     
-    protected boolean validPos(double X, double Y){ //for an external programmer to determine if a spot is valid to move to or not
-        return true;
-    }
+    //for an external programmer to determine if a spot is valid to move to or not
+    protected boolean validPos(double X, double Y){return true;}
     public final boolean moveTo(double X, double Y){ //for use by an external programmer
         if(!validPos(X,Y)) return false;
         if(!moved) sync++;
         AffineTransform transformer = new AffineTransform();
         double translateX = X-getX();
         double translateY = Y-getY();
-        if(attatchedItem!=null){
+        if(attachedItem!=null){
             pivotX += translateX;
             pivotY += translateY;
         }
@@ -132,16 +109,16 @@ public class GameObject
         moveTo(X,Y);
         return true;
     }
-    public final void attatchTo(GameObject o){
+    public final void attachTo(GameObject o){
         diffX = getX()-o.getX();
         diffY = getY()-o.getY();
-        attatchedItem = o;
+        attachedItem = o;
     }
-    public final void attatchItem(GameObject o){
-        o.attatchTo(this);
+    public final void attachItem(GameObject o){
+        o.attachTo(this);
     }
-    public final GameObject getAttatchedItem(){
-        return attatchedItem;
+    public final GameObject getattachedItem(){
+        return attachedItem;
     }
     public final boolean rotate(double angle){
         //rotation necessitates shape to be instance of Path2D
@@ -180,10 +157,10 @@ public class GameObject
         double rate = Constants.TICK_RATE;
         speedX += accelX/rate;
         speedY += accelY/rate;
-        if(attatchedItem==null)
+        if(attachedItem==null)
             moveTo(x+(speedX/rate), y+(speedY/rate), tick); //simulate speed per tick
         else
-            moveTo(attatchedItem.getX()+diffX, attatchedItem.getY()+diffY); //maintain attatchment
+            moveTo(attachedItem.getX()+diffX, attachedItem.getY()+diffY); //maintain attachment
         sync = tick;
         moved = false; //reset moved boolean for the next tick
     }

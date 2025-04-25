@@ -20,6 +20,13 @@ public class GamePanel extends JPanel
     public int getTick(){return tick;}
     private boolean stopped=true;
     public boolean isStopped(){return stopped;}
+    private double cameraX=0, cameraY=0;
+    public double getCameraX(){return cameraX;}
+    public double getCameraY(){return cameraY;}
+    public synchronized void setCamera(double x, double y){
+        cameraX = x;
+        cameraY = y;
+    }
     private Timer interval=null;
     private ActionListener timerFn;
     private LinkedHashMap<Integer,GameObject> gameItems;
@@ -35,12 +42,8 @@ public class GamePanel extends JPanel
         keyboardGameItems.remove(o.hashCode(),o);
         mouseGameItems.remove(o.hashCode(),o);
     }
-    public synchronized void removeItem(GameObject o){
-        deletedGameItems.put(o.hashCode(),o);
-    }
-    public synchronized void removeItem(CompositeGameObject o){
-        o.removeFromPanel(this);
-    }
+    public synchronized void removeItem(GameObject o){deletedGameItems.put(o.hashCode(),o);}
+    public synchronized void removeItem(CompositeGameObject o){o.removeFromPanel(this);}
     public synchronized void addItem(GameObject o){
         Dimension size = getSize();
         double width = size.getWidth();
@@ -48,9 +51,7 @@ public class GamePanel extends JPanel
         o.onPanelResize(width,height);
         gameItems.put(o.hashCode(),o);
     }
-    public synchronized void addItem(CompositeGameObject o){
-        o.addToPanel(this);
-    }
+    public synchronized void addItem(CompositeGameObject o){o.addToPanel(this);}
     public synchronized void addItem(GameObject o, boolean keyboardListener, boolean mouseListener){
         if(keyboardListener) keyboardGameItems.put(o.hashCode(),o);
         if(mouseListener) mouseGameItems.put(o.hashCode(),o);
@@ -60,6 +61,7 @@ public class GamePanel extends JPanel
     public void paint(Graphics g){
         super.paintComponent(g);
         Graphics2D g2 = (Graphics2D) g;
+        g2.translate(-cameraX, -cameraY);
         for(GameObject gameObject: gameItems.values()){
             if(deletedGameItems.get(gameObject)!=null) continue;
             if(gameObject.hasImage()){
