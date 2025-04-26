@@ -131,6 +131,8 @@ public class GamePanel extends JPanel
         int ms = 1000/Constants.TICK_RATE;
         interval = new Timer(ms,timerFn);
         tick = 0;
+        cameraX = 0;
+        cameraY = 0;
         interval.start();
         stopped = false;
     }
